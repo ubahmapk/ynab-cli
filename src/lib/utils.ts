@@ -8,9 +8,16 @@ export function amountToMilliunits(amount: number): number {
   return Math.round(amount * 1000);
 }
 
+const MAX_CONVERT_DEPTH = 50;
+
 export function convertMilliunitsToAmounts(data: unknown): unknown {
+  return _convertInner(data, 0);
+}
+
+function _convertInner(data: unknown, depth: number): unknown {
+  if (depth > MAX_CONVERT_DEPTH) return data;
   if (data === null || data === undefined) return data;
-  if (Array.isArray(data)) return data.map(convertMilliunitsToAmounts);
+  if (Array.isArray(data)) return data.map((item) => _convertInner(item, depth + 1));
   if (typeof data !== 'object') return data;
 
   const converted: Record<string, unknown> = {};
@@ -30,7 +37,7 @@ export function convertMilliunitsToAmounts(data: unknown): unknown {
       }
       converted[key] = convertedMap;
     } else {
-      converted[key] = convertMilliunitsToAmounts(value);
+      converted[key] = _convertInner(value, depth + 1);
     }
   }
   return converted;

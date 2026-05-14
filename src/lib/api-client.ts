@@ -367,10 +367,17 @@ export class YnabClient {
   }
 
   async rawApiCall(method: string, path: string, data?: unknown, budgetId?: string) {
+    if (!path.startsWith('/')) {
+      throw new YnabCliError('API path must start with /', 400);
+    }
+    if (path.split('/').some((segment) => segment === '..')) {
+      throw new YnabCliError('API path must not contain path traversal segments', 400);
+    }
+
     await this.getApi();
 
     const fullPath = path.includes('{budget_id}')
-      ? path.replace('{budget_id}', await this.getBudgetId(budgetId))
+      ? path.replace('{budget_id}', encodeURIComponent(await this.getBudgetId(budgetId)))
       : path;
 
     const url = `https://api.ynab.com/v1${fullPath}`;

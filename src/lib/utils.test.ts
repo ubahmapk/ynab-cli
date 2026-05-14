@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeTransactions, findTransferCandidates, type SummaryTransaction } from './utils.js';
+import {
+  summarizeTransactions,
+  findTransferCandidates,
+  convertMilliunitsToAmounts,
+  type SummaryTransaction,
+} from './utils.js';
 
 function makeTx(overrides: Partial<SummaryTransaction> = {}): SummaryTransaction {
   return {
@@ -139,5 +144,56 @@ describe('findTransferCandidates', () => {
     expect(candidates[0].date_difference_days).toBe(0);
     expect(candidates[1].date_difference_days).toBe(1);
     expect(candidates[2].date_difference_days).toBe(2);
+  });
+});
+
+describe('convertMilliunitsToAmounts', () => {
+  it('converts amount fields from milliunits to dollars', () => {
+    const result = convertMilliunitsToAmounts({ amount: 5000, name: 'test' });
+    expect(result).toEqual({ amount: 5, name: 'test' });
+  });
+
+  it('does not mutate the original object', () => {
+    const original = { amount: 5000 };
+    convertMilliunitsToAmounts(original);
+    expect(original.amount).toBe(5000);
+  });
+
+  it('converts nested amount fields', () => {
+    const result = convertMilliunitsToAmounts({ transaction: { amount: 10000 } }) as {
+      transaction: { amount: number };
+    };
+    expect(result.transaction.amount).toBe(10);
+  });
+
+  it('converts amount fields in arrays', () => {
+    const result = convertMilliunitsToAmounts([{ amount: 1000 }, { amount: 2000 }]) as Array<{
+      amount: number;
+    }>;
+    expect(result[0].amount).toBe(1);
+    expect(result[1].amount).toBe(2);
+  });
+
+  it('passes through non-amount fields unchanged', () => {
+    const result = convertMilliunitsToAmounts({ id: 'abc', name: 'Test', memo: 'hello' });
+    expect(result).toEqual({ id: 'abc', name: 'Test', memo: 'hello' });
+  });
+
+  it('handles null and undefined without throwing', () => {
+    expect(convertMilliunitsToAmounts(null)).toBeNull();
+    expect(convertMilliunitsToAmounts(undefined)).toBeUndefined();
+  });
+
+  it('does not crash on objects nested beyond 50 levels', () => {
+    let deep: unknown = { amount: 1000 };
+    for (let i = 0; i < 60; i++) deep = { nested: deep };
+    expect(() => convertMilliunitsToAmounts(deep)).not.toThrow();
+  });
+
+  it('returns data unconverted at depth > 50 rather than crashing', () => {
+    let deep: unknown = { amount: 5000 };
+    for (let i = 0; i < 52; i++) deep = { n: deep };
+    const result = convertMilliunitsToAmounts(deep);
+    expect(result).toBeDefined();
   });
 });

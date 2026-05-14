@@ -18,6 +18,26 @@ describe('sanitizeErrorMessage', () => {
       input: 'Failed: api_key=super-secret-key',
       shouldNotContain: 'super-secret-key',
     },
+    {
+      pattern: 'access_token value',
+      input: 'Error: access_token=supersecret',
+      shouldNotContain: 'supersecret',
+    },
+    {
+      pattern: 'access_token key-value entirely',
+      input: 'Error: access_token=supersecret',
+      shouldNotContain: 'access_token=',
+    },
+    {
+      pattern: 'secret key-value pairs',
+      input: 'Failed: secret=my-secret-value',
+      shouldNotContain: 'my-secret-value',
+    },
+    {
+      pattern: 'token as JSON string value',
+      input: '{"access_token": "supersecret"}',
+      shouldNotContain: 'supersecret',
+    },
   ])('should redact $pattern', ({ input, shouldNotContain }) => {
     const result = sanitizeErrorMessage(input);
     expect(result).not.toContain(shouldNotContain);

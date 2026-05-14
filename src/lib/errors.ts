@@ -29,9 +29,11 @@ const ERROR_STATUS_CODES: Record<string, number> = {
 export function sanitizeErrorMessage(message: string): string {
   const sensitivePatterns = [
     /Bearer\s+[\w\-._~+/]+=*/gi,
-    /token[=:]\s*[\w\-._~+/]+=*/gi,
-    /api[_-]?key[=:]\s*[\w\-._~+/]+=*/gi,
     /authorization:\s*bearer\s+[\w\-._~+/]+=*/gi,
+    /[\w-]*token[=:]\s*[\w\-._~+/]+=*/gi,
+    /api[_-]?key[=:]\s*[\w\-._~+/]+=*/gi,
+    /secret[=:]\s*[\w\-._~+/]+=*/gi,
+    /["'][\w-]*(?:token|secret|key)["']\s*:\s*["'][\w\-._~+/]+=*["']/gi,
   ];
 
   let sanitized = message;

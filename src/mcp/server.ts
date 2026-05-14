@@ -276,10 +276,11 @@ server.tool(
 
 server.tool(
   'delete_transaction',
-  'Delete a transaction',
+  'Permanently delete a transaction. Cannot be undone.',
   {
     transactionId: z.string().describe('Transaction ID'),
     budgetId: z.string().optional().describe('Budget ID (uses default if not specified)'),
+    confirmed: z.literal(true).describe('Must be exactly true to confirm permanent deletion'),
   },
   async ({ transactionId, budgetId }) =>
     currencyResponse(await client.deleteTransaction(transactionId, budgetId))
@@ -501,10 +502,11 @@ server.tool(
 
 server.tool(
   'delete_scheduled_transaction',
-  'Delete a scheduled transaction',
+  'Permanently delete a scheduled transaction. Cannot be undone.',
   {
     scheduledTransactionId: z.string().describe('Scheduled transaction ID'),
     budgetId: z.string().optional().describe('Budget ID (uses default if not specified)'),
+    confirmed: z.literal(true).describe('Must be exactly true to confirm permanent deletion'),
   },
   async ({ scheduledTransactionId, budgetId }) =>
     currencyResponse(await client.deleteScheduledTransaction(scheduledTransactionId, budgetId))
